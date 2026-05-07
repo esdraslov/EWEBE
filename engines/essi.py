@@ -6,28 +6,27 @@ import curses
 
 color_cache = {}
 def _approx_color(HSV: list[int], clist: dict[int, int]) -> int:
-    if color_cache.get(HSV):
-        return color_cache[HSV]
+    # if color_cache.get():
+    #     return color_cache[HSV]
 
     if HSV[1] <= 25 and HSV[2] >= 75:
         return clist.get(curses.COLOR_WHITE, 0)
     if HSV[2] <= 25:
         return clist.get(curses.COLOR_BLACK, 0)
     
-    if HSV[1] >= 75 and HSV[2] >= 75:
-        if HSV[0] < 8 or HSV[0] > 350:
-            return clist.get(curses.COLOR_RED, 0)
-        if 8 < HSV[0] < 67:
-            return clist.get(curses.COLOR_YELLOW, 0)
-        if 67 < HSV[0] < 136:
-            return clist.get(curses.COLOR_GREEN, 0)
-        if 136 < HSV[0] < 209:
-            return clist.get(curses.COLOR_CYAN, 0)
-        if 209 < HSV[0] < 270:
-            return clist.get(curses.COLOR_BLUE, 0)
-        if 270 < HSV[0] < 350:
-            return clist.get(curses.COLOR_MAGENTA, 0)
-        
+    if HSV[0] < 8 or HSV[0] > 350:
+        return clist.get(curses.COLOR_RED, 0)
+    if 8 < HSV[0] < 67:
+        return clist.get(curses.COLOR_YELLOW, 0)
+    if 67 < HSV[0] < 136:
+        return clist.get(curses.COLOR_GREEN, 0)
+    if 136 < HSV[0] < 209:
+        return clist.get(curses.COLOR_CYAN, 0)
+    if 209 < HSV[0] < 270:
+        return clist.get(curses.COLOR_BLUE, 0)
+    if 270 < HSV[0] < 350:
+        return clist.get(curses.COLOR_MAGENTA, 0)
+    
     return 0
 
 import re

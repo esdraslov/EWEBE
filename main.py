@@ -53,8 +53,8 @@ def view(stdscr, ans, mode):
                                 s = 0
                                 if isinstance(node, Tag):
                                     s = essi.style_tag(node.get("style"), cl)
-                                stdscr.addstr(y, 0, node.text[:w-1], s)
-                                y += 1
+                                    stdscr.addstr(y, 0, node.text[:w-1], s)
+                                    y += 1
 
                     rerender = False
                 draw_topbar(stdscr)

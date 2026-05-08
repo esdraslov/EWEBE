@@ -84,15 +84,21 @@ def view(stdscr, ans, mode):
                         walk(node)
 
             def draw():
-                nonlocal page
                 for info in page:
                     relative_y = info["y"] - scroll_y
-                    if 1 <= relative_y < h:
-                        stdscr.addstr(info["y"], info["x"], info["t"], info["s"])
+                    if 1 <= relative_y < h - 1:
+                        stdscr.addstr(relative_y, info["x"], info["t"], info["s"])
+
+            def process_key(k):
+                if k == curses.KEY_UP:
+                    scroll_y += 1
+                if k == curses.KEY_DOWN:
+                    scroll_y -= 1
 
             soup = BeautifulSoup(ans, "html.parser")
 
-            while True:
+            running = True
+            while running:
                 if rerender:
                     stdscr.clear()
                     for invis in soup(["script", "style"]):
@@ -109,10 +115,8 @@ def view(stdscr, ans, mode):
                 stdscr.refresh()
                 k = stdscr.getch()
 
-                if k == curses.KEY_UP:
-                    scroll_y -= 1 if scroll_y > 0 else 0
-                if k == curses.KEY_DOWN:
-                    scroll_y += 1 if scroll_y <= max_y else 0
+                if k != -1:
+                    rerender = True
         except KeyboardInterrupt:
             pass
 

@@ -2,7 +2,7 @@ import sys, os
 import curses
 from urllib.parse import urlparse
 import requests
-from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4 import BeautifulSoup, Comment, Tag
 from engines import essi
 
 def set_wname(name):
@@ -33,6 +33,8 @@ def draw_topbar(stdscr):
     stdscr.addstr(0, 0, " FILE" + (" " * (wsize[1] - 6)), curses.color_pair(1))
 
 def view(stdscr, ans, mode):
+    global colors
+
     set_wname("EWEBE")
     # For now, I'll assume the terminal supports colors
     curses.start_color()
@@ -43,42 +45,74 @@ def view(stdscr, ans, mode):
         cl[i+1] = i
     colors = True
     h, w = stdscr.getmaxyx()
-    rerender = True
+    rerender = True # This ensures the first render
+
+    stdscr.nodelay(True)
 
     if mode == "html":
         try:
 
             y = 1
+            page = []
+            scroll_y = 0
+            max_y = 0
             def walk(tag: Tag):
                 nonlocal y
+                nonlocal max_y
                 style = 0
-                if tag.get("style"):
-                    print("a")
+                if tag.attrs.get("style"):
                     style = essi.style_tag(tag.get("style"), cl)
-                for node in tag.descendants:
+                for node in tag.children:
                     if y >= h - 1:
                         break
+                    if isinstance(node, Comment):
+                        continue
                     if isinstance(node, str):
-                        stdscr.addstr(y, 0, node[:w-1], style)
-
-                    if hasattr(node, "children"):
+                        shown = str(node)[:w-1].strip()
+                        if shown == "": continue
+                        info = {
+                            "x": 0,
+                            "y": y,
+                            "t": shown,
+                            "l": "",
+                            "s": style
+                        }
+                        page.append(info)
+                        y += 1
+                        max_y += 1
+                    else:
                         walk(node)
+
+            def draw():
+                nonlocal page
+                for info in page:
+                    relative_y = info["y"] - scroll_y
+                    if 1 <= relative_y < h:
+                        stdscr.addstr(info["y"], info["x"], info["t"], info["s"])
+
+            soup = BeautifulSoup(ans, "html.parser")
 
             while True:
                 if rerender:
                     stdscr.clear()
-                    soup = BeautifulSoup(ans, "html.parser")
                     for invis in soup(["script", "style"]):
                         invis.decompose()
 
                     body = soup.body
                     if body:
                         walk(body)
+                    draw()
 
                     rerender = False
                 draw_topbar(stdscr)
 
                 stdscr.refresh()
+                k = stdscr.getch()
+
+                if k == curses.KEY_UP:
+                    scroll_y -= 1 if scroll_y > 0 else 0
+                if k == curses.KEY_DOWN:
+                    scroll_y += 1 if scroll_y <= max_y else 0
         except KeyboardInterrupt:
             pass
 

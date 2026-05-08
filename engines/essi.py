@@ -38,7 +38,6 @@ def parse_hsl(css_value):
     
     if match:
         # Convert the three found groups into integers
-        print(match)
         h, s, l = map(int, match.groups())
         return [h, s, l]
     return None

@@ -5,14 +5,22 @@ import requests
 from bs4 import BeautifulSoup, NavigableString, Tag
 from engines import essi
 
+def set_wname(name):
+    if os.name == "nt":
+        os.system(f"title {name}")
+    elif os.name == "posix":
+        sys.stdout.write(f"\033]0;{name}\a")
+        sys.stdout.flush()
+
 def get_content(uri):
     parsed = urlparse(uri)
 
     if parsed.scheme == "file":
         path = parsed.path
         if os.path.exists(path):
-            with open(path, 'r', encoding="utf-8") as f:
-                return f.read(), 200, "text/html"
+            if os.path.isfile(path):
+                with open(path, 'r', encoding="utf-8") as f:
+                    return f.read(), 200, "text/html"
         else:
             return "<html><body>404 file not found</body></html>", 404, "text/html"
     else:
@@ -25,6 +33,7 @@ def draw_topbar(stdscr):
     stdscr.addstr(0, 0, " FILE" + (" " * (wsize[1] - 6)), curses.color_pair(1))
 
 def view(stdscr, ans, mode):
+    set_wname("EWEBE")
     # For now, I'll assume the terminal supports colors
     curses.start_color()
     curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
@@ -38,6 +47,22 @@ def view(stdscr, ans, mode):
 
     if mode == "html":
         try:
+
+            y = 1
+            def walk(tag: Tag):
+                nonlocal y
+                style = 0
+                if tag.get("style"):
+                    style = essi.style_tag(tag.get("style"), cl)
+                for node in tag.descendants:
+                    if y >= h - 1:
+                        break
+                    if isinstance(node, str):
+                        stdscr.addstr(y, 0, node[:w-1], style)
+
+                    if hasattr(node, "children"):
+                        walk(node)
+
             while True:
                 if rerender:
                     stdscr.clear()
@@ -47,14 +72,7 @@ def view(stdscr, ans, mode):
 
                     body = soup.body
                     if body:
-                        y = 1
-                        for node in body.descendants:
-                            if y < h - 1:
-                                s = 0
-                                if isinstance(node, Tag):
-                                    s = essi.style_tag(node.get("style"), cl)
-                                    stdscr.addstr(y, 0, node.text[:w-1], s)
-                                    y += 1
+                        walk(body)
 
                     rerender = False
                 draw_topbar(stdscr)
@@ -68,7 +86,6 @@ url = input("Insert URL/URI here: ")
 
 text, status, format = get_content(url)
 print(status, format)
-if 300 > status > 199:
-    match format:
-        case "text/html":
-            curses.wrapper(view, text, "html")
+match format:
+    case "text/html":
+        curses.wrapper(view, text, "html")

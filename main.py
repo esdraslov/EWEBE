@@ -53,6 +53,7 @@ def view(stdscr, ans, mode):
                 nonlocal y
                 style = 0
                 if tag.get("style"):
+                    print("a")
                     style = essi.style_tag(tag.get("style"), cl)
                 for node in tag.descendants:
                     if y >= h - 1:

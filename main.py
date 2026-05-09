@@ -70,7 +70,7 @@ def view(stdscr, ans, mode):
                     if isinstance(node, str):
                         shown = str(node)[:w-1].strip()
                         if shown == "": continue
-                        if style["positioning"] == "absolute":
+                        if style.get("positioning") == "absolute":
                             info = {
                                 "x": style["x"],
                                 "y": style["y"],

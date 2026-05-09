@@ -43,26 +43,34 @@ def parse_hsl(css_value):
     return None
 
 def _interpret_inline_css(css: str, clist):
-    # 1. Clean the string and split by semicolon
     declarations = [d.strip() for d in css.split(";") if ":" in d]
-    styles = {"color": 0, "positioning": "static", "x": 0, "y": 0} # Default
+    # Initialize defaults
+    styles = {"color": 0, "positioning": "static", "x": 0, "y": 0}
 
     for decl in declarations:
-        prop, val = decl.split(":", 1)
-        prop = prop.strip().lower()
-        val = val.strip().lower()
+        prop, val = [part.strip().lower() for part in decl.split(":", 1)]
 
         if prop == "color":
             hsl_values = parse_hsl(val)
             if hsl_values:
-                # Now you have [H, S, L] as clean integers
                 styles["color"] = _approx_color(hsl_values, clist)
-        if prop == "position":
-            if val in ["abolute", "relative", "static", "fixed"]:
+        
+        elif prop == "position":
+            # Fixed the 'absolute' spelling
+            if val in ["absolute", "relative", "static", "fixed"]:
                 styles["positioning"] = val
-        if prop == "top":
-            if styles["positioning"] == "absolute":
-                styles["y"] = val[:len(str(val))-2] // 80
+        
+        elif prop == "top":
+            # Use regex or strip to get just the numbers from "10px"
+            num_val = "".join(filter(str.isdigit, val))
+            if num_val:
+                # Store it as an int so you can use it in math later
+                styles["y"] = int(num_val)  // 16
+
+        elif prop == "left":
+            num_val = "".join(filter(str.isdigit, val))
+            if num_val:
+                styles["x"] = int(num_val) // 8
                 
     return styles
 

@@ -4,6 +4,8 @@
 '''
 import curses
 
+__version__ = "0.1.0"
+
 color_cache = {}
 def _approx_color(HSV: list[int], clist: dict[int, int]) -> int:
     # if color_cache.get():
@@ -45,7 +47,7 @@ def parse_hsl(css_value):
 def _interpret_inline_css(css: str, clist):
     declarations = [d.strip() for d in css.split(";") if ":" in d]
     # Initialize defaults
-    styles = {"color": 0, "positioning": "static", "x": 0, "y": 0}
+    styles = {"color": 0, "positioning": "static", "x": 0, "y": 0, "z": 0}
 
     for decl in declarations:
         prop, val = [part.strip().lower() for part in decl.split(":", 1)]
@@ -71,7 +73,13 @@ def _interpret_inline_css(css: str, clist):
             num_val = "".join(filter(str.isdigit, val))
             if num_val:
                 styles["x"] = int(num_val) // 8
-                
+
+        elif prop == "z-index":
+            try:
+                styles["z"] = int(val)
+            except:
+                styles["z"] = 0
+            
     return styles
 
 def style_tag(style, clist):

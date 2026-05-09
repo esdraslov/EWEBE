@@ -1,9 +1,20 @@
 import sys, os
+import platform
 import curses
 from urllib.parse import urlparse
 import requests
 from bs4 import BeautifulSoup, Comment, Tag
-from engines import essi
+import bs4 # I know, double importing is bad, but just so I can get the correct __version__
+from engines import essi, jengine
+
+__version__ = "0.1.0-alpha"
+
+osn = platform.system() # Could I use another library? Yes. Did I choose to? No.
+osa = platform.architecture()
+osr = platform.release()
+header = {
+    "User-Agent": f"EWEBE/{__version__} ({osn}; {osr}; {osa}) BeautifulSoup/{bs4.__version__} Essi/{essi.__version__} JEngine/{jengine.__version__}"
+}
 
 def set_wname(name):
     if os.name == "nt":
@@ -24,7 +35,7 @@ def get_content(uri):
         else:
             return "<html><body>404 file not found</body></html>", 404, "text/html"
     else:
-        re = requests.get(uri)
+        re = requests.get(uri, headers=header, timeout=5)
         return re.text, re.status_code, re.headers.get("content-type", "").split(";")[0]
 
 colors = False
@@ -61,7 +72,7 @@ def view(stdscr, ans, mode):
                 nonlocal max_y
                 style = {}
                 if tag.attrs.get("style"):
-                    style = essi.style_tag(tag.get("style"), cl)
+                    style = essi._interpret_inline_css(tag.get("style"), cl)
                 for node in tag.children:
                     if y >= h - 1:
                         break
@@ -77,7 +88,7 @@ def view(stdscr, ans, mode):
                                 "t": shown,
                                 "l": "",
                                 "s": style,
-                                "z": 0,
+                                "z": style["z"],
                                 "b": False
                             }
                             page.append(info)
@@ -98,7 +109,8 @@ def view(stdscr, ans, mode):
                         walk(node)
 
             def draw():
-                for info in page:
+                spage = sorted(page, key=lambda x: x.get("z", 0))
+                for info in spage:
                     relative_y = info["y"] - scroll_y
                     if 1 <= relative_y < h - 1:
                         stdscr.addstr(relative_y, info["x"], info["t"], curses.color_pair(info["s"].get("color", 0)))

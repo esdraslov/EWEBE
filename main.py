@@ -70,17 +70,30 @@ def view(stdscr, ans, mode):
                     if isinstance(node, str):
                         shown = str(node)[:w-1].strip()
                         if shown == "": continue
-                        info = {
-                            "x": 0,
-                            "y": y,
-                            "t": shown,
-                            "l": "",
-                            "s": style,
-                            "z": 0
-                        }
-                        page.append(info)
-                        y += 1
-                        max_y += 1
+                        if style["positioning"] == "absolute":
+                            info = {
+                                "x": style["x"],
+                                "y": style["y"],
+                                "t": shown,
+                                "l": "",
+                                "s": style,
+                                "z": 0,
+                                "b": False
+                            }
+                            page.append(info)
+                        else:
+                            info = {
+                                "x": 0,
+                                "y": y,
+                                "t": shown,
+                                "l": "",
+                                "s": style,
+                                "z": 0,
+                                "b": False
+                            }
+                            page.append(info)
+                            y += 1
+                            max_y += 1
                     else:
                         walk(node)
 

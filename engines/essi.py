@@ -59,7 +59,10 @@ def _interpret_inline_css(css: str, clist):
                 styles["color"] = _approx_color(hsl_values, clist)
         if prop == "position":
             if val in ["abolute", "relative", "static", "fixed"]:
-                styles["positioning"] == val
+                styles["positioning"] = val
+        if prop == "top":
+            if styles["positioning"] == "absolute":
+                styles["y"] = val[:len(str(val))-2] // 80
                 
     return styles
 

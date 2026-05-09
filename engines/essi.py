@@ -45,7 +45,7 @@ def parse_hsl(css_value):
 def _interpret_inline_css(css: str, clist):
     # 1. Clean the string and split by semicolon
     declarations = [d.strip() for d in css.split(";") if ":" in d]
-    styles = {"color": 0} # Default
+    styles = {"color": 0, "positioning": "static", "x": 0, "y": 0} # Default
 
     for decl in declarations:
         prop, val = decl.split(":", 1)
@@ -57,8 +57,11 @@ def _interpret_inline_css(css: str, clist):
             if hsl_values:
                 # Now you have [H, S, L] as clean integers
                 styles["color"] = _approx_color(hsl_values, clist)
+        if prop == "position":
+            if val in ["abolute", "relative", "static", "fixed"]:
+                styles["positioning"] == val
                 
     return styles
 
 def style_tag(style, clist):
-    return _interpret_inline_css(style, clist)["color"]
+    return _interpret_inline_css(style, clist)

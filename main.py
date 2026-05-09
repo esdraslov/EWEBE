@@ -59,7 +59,7 @@ def view(stdscr, ans, mode):
             def walk(tag: Tag):
                 nonlocal y
                 nonlocal max_y
-                style = 0
+                style = {}
                 if tag.attrs.get("style"):
                     style = essi.style_tag(tag.get("style"), cl)
                 for node in tag.children:
@@ -75,7 +75,8 @@ def view(stdscr, ans, mode):
                             "y": y,
                             "t": shown,
                             "l": "",
-                            "s": style
+                            "s": style,
+                            "z": 0
                         }
                         page.append(info)
                         y += 1
@@ -87,13 +88,17 @@ def view(stdscr, ans, mode):
                 for info in page:
                     relative_y = info["y"] - scroll_y
                     if 1 <= relative_y < h - 1:
-                        stdscr.addstr(relative_y, info["x"], info["t"], info["s"])
+                        stdscr.addstr(relative_y, info["x"], info["t"], curses.color_pair(info["s"].get("color", 0)))
 
             def process_key(k):
+                nonlocal scroll_y
+                nonlocal soup
                 if k == curses.KEY_UP:
-                    scroll_y += 1
-                if k == curses.KEY_DOWN:
                     scroll_y -= 1
+                if k == curses.KEY_DOWN:
+                    scroll_y += 1
+                if k == 18:
+                    soup = BeautifulSoup(ans, "html.parser")
 
             soup = BeautifulSoup(ans, "html.parser")
 
@@ -101,6 +106,7 @@ def view(stdscr, ans, mode):
             while running:
                 if rerender:
                     stdscr.clear()
+                    h, w = stdscr.getmaxyx()
                     for invis in soup(["script", "style"]):
                         invis.decompose()
 
@@ -116,6 +122,7 @@ def view(stdscr, ans, mode):
                 k = stdscr.getch()
 
                 if k != -1:
+                    process_key(k)
                     rerender = True
         except KeyboardInterrupt:
             pass
